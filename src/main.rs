@@ -1,7 +1,9 @@
 use std::fs;
+mod utils;
+use utils::{Direction, get_instructions};
 
 fn main() {
-    let filename = "data/day3.txt";
+    let filename = "data/day3xsmall.txt";
     let spliter = "\r\n";
     let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
 
@@ -10,95 +12,84 @@ fn main() {
     let get_first: Vec<&str> = items[0].split(",").collect();
     let get_sec: Vec<&str> = items[1].split(",").collect();
 
-    let line1 = drawline(get_instructions(get_first));
-    let line2 = drawline(get_instructions(get_sec));
+    let line1 = drawline(get_instructions(get_first), 1);
+    let line2 = drawline(get_instructions(get_sec), 2);
+
+    // println!("line1 {:?}, {:?}", line1[0], line1[1]);
 
     let intersections = find_match(line1, line2);
 
     println!("intersections {:?}", intersections);
     
-    let mut distance: Vec<i32> = find_distance(intersections);
+    let mut distance: Vec<i32> = find_intersect_distance(intersections);
     distance.sort();
 
     println!("distances {:?}", distance);
 }
 
-#[derive(Copy, Clone, Debug)]
-enum Direction {
-    Up(i32),
-    Down(i32),
-    Right(i32),
-    Left(i32),
-}
-
-#[derive(Copy, Clone, Debug)]
-struct Segment {
+#[derive(Debug,Copy, Clone)]
+struct Segment{
+    line: i32,
     bottom: (i32, i32),
     top: (i32, i32),
     dir: Direction,
+    length: i32,
 }
-
-fn get_instructions(data: Vec<&str>) -> Vec<Direction> {
-    let mut instruction: Vec<Direction> = Vec::new();
-
-    for item in data {
-        let first_char = item.get(..1).unwrap();
-        let num = item.get(1..).unwrap().parse::<i32>().unwrap();
-
-        let dir = match first_char {
-            "U" => Direction::Up(num),
-            "D" => Direction::Down(num),
-            "L" => Direction::Left(num),
-            "R" => Direction::Right(num),
-            _ => Direction::Up(0),
-        };
-        &instruction.push(dir);
-    }
-    instruction
-}
-
-fn drawline(instructions: Vec<Direction>) -> Vec<Segment> {
+fn drawline(instructions: Vec<Direction>, owner: i32) -> Vec<Segment> {
     let mut loc = (0, 0);
-    // let mut line = vec!(loc.clone());
+    let mut length = 0;
     let mut line: Vec<Segment> = Vec::new();
     for segment in instructions {
         match segment {
             Direction::Up(num) => {
                 line.push(Segment {
+                    line: owner,
                     bottom: loc,
                     top: (loc.0, loc.1 + num),
                     dir: Direction::Up(num),
+                    length: num + length,
                 });
-                loc.1 += num.clone();
+                length += num;
+                loc.1 += num;
             }
             Direction::Down(num) => {
                 line.push(Segment {
+                    line: owner,
                     bottom: (loc.0, loc.1 - num),
                     top: loc,
                     dir: Direction::Down(num),
+                    length: num + length,
                 });
-                loc.1 -= num.clone();
+                length += num;
+                loc.1 -= num;
             }
             Direction::Right(num) => {
                 line.push(Segment {
+                    line: owner,
                     bottom: loc,
                     top: (loc.0 + num, loc.1),
                     dir: Direction::Right(num),
+                    length: num + length,
                 });
-                loc.0 += num.clone();
+                length += num;
+                loc.0 += num;
             }
             Direction::Left(num) => {
                 line.push(Segment {
+                    line: owner,
                     bottom: (loc.0 - num, loc.1),
                     top: loc,
                     dir: Direction::Right(num),
+                    length: num + length,
                 });
-                loc.0 -= num.clone();
+                length += num;
+                loc.0 -= num;
             }
         }
     }
     line
 }
+
 
 fn find_match(l1: Vec<Segment>, l2: Vec<Segment>) -> Vec<(i32, i32)> {
     let mut matches: Vec<(i32, i32)> = Vec::new();
@@ -136,11 +127,29 @@ fn find_match(l1: Vec<Segment>, l2: Vec<Segment>) -> Vec<(i32, i32)> {
     }
     matches
 }
-fn find_intersect(vertical: Segment, horizontal: Segment) -> (i32,i32){
-    (vertical.top.0, horizontal.bottom.1)
+fn find_intersect(v: Segment, h: Segment) -> (i32,i32){
+    println!("v-len {:?}, h- len {:?} before intersect adjustment", v.length, h.length);
+    //len before intersect
+    let h_seg_len = h.top.0 - h.bottom.0;
+    let v_seg_len = v.top.1 - v.bottom.1;
+    println!("seg len: v-{:?} h-{:?}",v_seg_len, h_seg_len);
+    
+    // let h_intersect_len = h_len + v.top.0;
+    let h_intersect_len = h.length - h_seg_len + v.top.0;
+    let v_intersect_len = v.length - v_seg_len + h.top.1;
+    println!("seg len - seg len: v-{:?} h-{:?}",v_intersect_len, h_intersect_len);
+
+    // let h_dif = h.length - h_intersect_len;
+    // let v_dif = v.length - v_intersect_len;
+    // println!("h-seg len adjusted {}", h_dif);
+    // println!("v-seg len adjusted {}", v_dif);
+    println!("");
+    // println!("v-length - remainder = {}", h.length - remainder);
+    // println!("h-length = {}", v.length - v.bottom.1);
+    (v.top.0, h.bottom.1)
 }
 
-fn find_distance(val: Vec<(i32,i32)>) -> Vec<i32>{  
+fn find_intersect_distance(val: Vec<(i32,i32)>) -> Vec<i32>{  
     let mut result: Vec<i32> = Vec::new();  
 
     for mut n in val{

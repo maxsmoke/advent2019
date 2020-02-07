@@ -34,3 +34,30 @@ pub fn fuel_calc(mass: f32) -> f32 {
     let cal = mass / 3.0;
     cal.floor() - 2.0
 }
+
+#[derive(Copy, Clone, Debug)]
+pub enum Direction {
+    Up(i32),
+    Down(i32),
+    Right(i32),
+    Left(i32),
+}
+
+pub fn get_instructions(data: Vec<&str>) -> Vec<Direction> {
+    let mut instruction: Vec<Direction> = Vec::new();
+
+    for item in data {
+        let first_char = item.get(..1).unwrap();
+        let num = item.get(1..).unwrap().parse::<i32>().unwrap();
+
+        let dir = match first_char {
+            "U" => Direction::Up(num),
+            "D" => Direction::Down(num),
+            "L" => Direction::Left(num),
+            "R" => Direction::Right(num),
+            _ => Direction::Up(0),
+        };
+        &instruction.push(dir);
+    }
+    instruction
+}
