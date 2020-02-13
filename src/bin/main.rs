@@ -6,6 +6,8 @@ fn main(){
     // problems::d1p2::run();
     // problems::d2::run();
     // problems::d2p2::run();
-    problems::d3::run();
+    // problems::d3::run();
     // problems::d3p2::run(); //couldnt figure it out
+    // problems::d4::run();
+    problems::d4p2::run();
 }

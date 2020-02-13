@@ -4,7 +4,6 @@ use std::fs;
 pub enum IntType{
     I32(Vec<i32>),
     F32(Vec<f32>),
-    // TXT(Lines<'a, 'b>), 
 }
 
 pub fn read(filename: &str, spliter: &str, mut int_type: IntType) -> IntType{
